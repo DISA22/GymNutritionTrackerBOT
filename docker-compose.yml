@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: SmartGym
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: SmartGym
+      POSTGRES_USER: SmartGym
+      POSTGRES_PASSWORD: SmartGym
+    ports:
+      - '5432:5432'
+    volumes:
+        - postgres_data:/var/lib/postgresql/data
+        - /mnt/c/Users/rylts/IdeaProjects/SmartGymNutritionTracker/src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql
+volumes:
+ postgres_data:
