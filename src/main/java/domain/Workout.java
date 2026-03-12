@@ -1,27 +1,26 @@
 package domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "workouts")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 
-public class Workouts {
+public class Workout {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    private User user;
 
     @Column(name = "workout_date", nullable = false) // если колонка называется иначе
     private LocalDateTime workoutDate;

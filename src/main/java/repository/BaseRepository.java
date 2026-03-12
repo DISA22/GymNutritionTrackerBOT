@@ -1,9 +1,12 @@
 package repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 
 import java.util.List;
 import java.util.Optional;
+
+@Slf4j
 
 public abstract class BaseRepository<T, ID> {
     private final Class<T> entityClass;
@@ -14,12 +17,11 @@ public abstract class BaseRepository<T, ID> {
 
     public void save(Session session, T entity) {
         try {
-            session.beginTransaction();
             session.persist(entity);
-            session.getTransaction().commit();
-        } catch (RuntimeException e) {
-            System.out.println("Сохранить в БД не удалось: " + e.getMessage());
-            throw new RuntimeException(e);
+
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+
         }
     }
 
@@ -28,9 +30,8 @@ public abstract class BaseRepository<T, ID> {
             session.beginTransaction();
             T t = session.merge(entity);
             session.getTransaction().commit();
-        } catch (RuntimeException e) {
-            System.out.print("Обновить в БД не удалось");
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -45,7 +46,7 @@ public abstract class BaseRepository<T, ID> {
         }
     }
 
-    public Optional<T> findById(Session session, Long id) {
+    public Optional<T> findById(Session session, ID id) {
         var entity = session.find(entityClass, id);
         return Optional.ofNullable(entity);
     }

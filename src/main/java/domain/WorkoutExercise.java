@@ -1,32 +1,30 @@
 package domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Duration;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "WORKOUT_EXERCISES")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 //Тренировочные упражнения что именно делал на тренировке
-public class WorkoutExercises {
+public class WorkoutExercise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "workout_id", nullable = false)
-    private Workouts workout;
+    private Workout workout;
 
     @ManyToOne
     @JoinColumn(name = "exercise_id", nullable = false)
-    private Exercises exercise;
+    private Exercise exercise;
 
     @Column(nullable = false)
     private Integer sets;

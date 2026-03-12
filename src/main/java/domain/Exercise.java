@@ -1,19 +1,18 @@
 package domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+
 @Entity
 @Table(name = "EXERCISES")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
+@Setter
         //Упражнения
-public class Exercises {
+public class Exercise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

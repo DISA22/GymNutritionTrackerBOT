@@ -39,12 +39,12 @@ public class HibernateFactory {
 
         try {
             sessionFactory = new MetadataSources(registry)
-                    .addAnnotatedClass(Exercises.class)
-                    .addAnnotatedClass(Workouts.class)
-                    .addAnnotatedClass(WorkoutExercises.class)
-                    .addAnnotatedClass(Users.class)
-                    .addAnnotatedClass(FoodEntries.class)
-                    .addAnnotatedClass(NutritionGoals.class)
+                    .addAnnotatedClass(Exercise.class)
+                    .addAnnotatedClass(Workout.class)
+                    .addAnnotatedClass(WorkoutExercise.class)
+                    .addAnnotatedClass(User.class)
+                    .addAnnotatedClass(Food.class)
+                    .addAnnotatedClass(UserFood.class)
                     .buildMetadata()
                     .buildSessionFactory();
         } catch (Exception e) {

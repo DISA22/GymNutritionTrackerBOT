@@ -2,23 +2,25 @@ package domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
 @ToString
-public class Users {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    private Long chatId;
+    @Column(name = "telegram_id", nullable = false, unique = true)
+    private Long telegramId;
 
     @Column(nullable = false)
     private String username;
@@ -34,6 +36,8 @@ public class Users {
 
     private String goal;
 
-    @Column(name = "created_at")
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT NOW()")
     private LocalDateTime createdAt;
 }
