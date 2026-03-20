@@ -1,7 +1,9 @@
 package bot;
 
+import bot.command.HistoryCommand;
+import bot.command.NutritionCommand;
+import bot.command.NutritionGoalCommand;
 import config.TelegramConfig;
-import integration.EdamanHttpClient;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -9,18 +11,24 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import service.FoodService;
+import service.NutritionGoalsService;
+import service.UserFoodService;
 import service.UserService;
 
 @Slf4j
 public class GymNutritionTrackerBot extends TelegramLongPollingBot {
     private final UserService userService;
     private final CommandResolver commandResolver;
+   // private final UserFoodService userFoodService;
+    private final NutritionGoalsService nutritionGoalsService;
 
 
-    public GymNutritionTrackerBot(UserService userService, FoodService foodService) {
+    public GymNutritionTrackerBot(UserService userService, FoodService foodService, UserFoodService userFoodService, NutritionGoalsService nutritionGoalsService) {
         super(TelegramConfig.getBotToken());
         this.userService = userService;
-        this.commandResolver = new CommandResolver(foodService);
+        this.commandResolver = new CommandResolver(foodService, nutritionGoalsService,userFoodService);
+      //  this.userFoodService = userFoodService;
+        this.nutritionGoalsService = nutritionGoalsService;
     }
 
     @Override
@@ -46,8 +54,24 @@ public class GymNutritionTrackerBot extends TelegramLongPollingBot {
         userService.getOrCreateByTelegramId(from.getUserName(), from.getId());
 
         try {
-            CommandResolver.ResolvedCommand resolvedCommand = commandResolver.resolve(text);
-            String result = resolvedCommand.command().execute(resolvedCommand.args());
+            CommandResolver.ResolvedCommand resolvedCommand = commandResolver.resolve(telegramgId, text);
+            String result = resolvedCommand.command().execute(telegramgId, resolvedCommand.args());
+// 👇 ВОТ ТУТ ЛОВИМ
+
+
+//            if (resolvedCommand.command() instanceof HistoryCommand) {
+//                String info = userFoodService.getFoodHistory(telegramgId);
+//                String calloris = nutritionGoalsService.calculateRemainingCalories(telegramgId);
+//                sendMessage(telegramgId, info + "\\n" + calloris);
+//                return;
+//            }
+
+            if (resolvedCommand.command() instanceof NutritionGoalCommand) {
+                String[] args = resolvedCommand.args();
+                nutritionGoalsService.setGoal(telegramgId, Double.parseDouble(args[0]));
+                sendMessage(telegramgId, "Установили цель " + args[0] + " ккал");
+                return;
+            }
 
 
             sendMessage(telegramgId, result);

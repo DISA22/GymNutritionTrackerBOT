@@ -3,6 +3,7 @@ package domain;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.FetchProfile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,20 +22,12 @@ public class UserFood {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", unique = true)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false)
-    private Double caloriesPerDay;
-
-    @Column(nullable = false)
-    private Double proteinPerDay;
-
-    @Column(nullable = false)
-    private Double fatPerDay;
-
-    @Column(nullable = false)
-    private Double carbsPerDay;
+    @ManyToOne
+    @JoinColumn(name = "food_id")
+    private Food food;
 
     @CreationTimestamp
     @Column(name = "date_time", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT NOW()")

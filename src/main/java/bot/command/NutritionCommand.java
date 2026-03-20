@@ -4,21 +4,25 @@ import integration.EdamanHttpClient;
 import integration.dto.NutritionData;
 import lombok.RequiredArgsConstructor;
 import service.FoodService;
+import service.NutritionGoalsService;
+import service.UserFoodService;
 
 import java.util.List;
 
 @RequiredArgsConstructor
 public class NutritionCommand implements Command {
     private final FoodService foodService;
+    private final UserFoodService userFoodService;
+
 
     @Override
-    public String execute(String... args) {
+    public String execute(Long id, String... args) {
         if (args.length == 0) return "Напиши в формате /getNutrition apple. Программа выдает отчет на 100гр продукта";
 
         String query = String.join(" ", args);
 
         var food = foodService.getOrCreateByName(query);
-
+        userFoodService.saveFood(id, query);
 
         StringBuilder response = new StringBuilder("Твой отчет на 100г продукта: \n");
 
@@ -29,6 +33,5 @@ public class NutritionCommand implements Command {
         response.append("Углеводы: ").append(String.format("%.1f", food.getCarbohydratesG())).append(" г").append("\n");
 
         return response.toString();
-
     }
 }

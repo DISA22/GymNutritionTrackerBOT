@@ -1,8 +1,10 @@
 package service;
 
+import cache.CashProvider;
 import config.TransactionSessionManager;
 import domain.Food;
 import integration.EdamanHttpClient;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import repository.FoodRepository;
 
@@ -24,8 +26,12 @@ public class FoodService extends BaseService<Food, Long, FoodRepository> {
     }
 
     public Food getOrCreateByName(String name) {
-        var foodFromDb = findByName(name);
+        var foodFromCache = CashProvider.get(name);
+        if (foodFromCache != null) {
+            return (Food) foodFromCache;
+        }
 
+        var foodFromDb = findByName(name);
         if (foodFromDb.isPresent())
             return foodFromDb.get();
 
@@ -44,12 +50,11 @@ public class FoodService extends BaseService<Food, Long, FoodRepository> {
                 .carbohydratesG(foodFromEdaman.carbohydrates())
                 .build();
 
+        CashProvider.set(name, food);
         save(food);
 
         return food;
     }
-
-
 
 
 }

@@ -45,6 +45,7 @@ public class HibernateFactory {
                     .addAnnotatedClass(User.class)
                     .addAnnotatedClass(Food.class)
                     .addAnnotatedClass(UserFood.class)
+                    .addAnnotatedClass(NutritionGoals.class)
                     .buildMetadata()
                     .buildSessionFactory();
         } catch (Exception e) {

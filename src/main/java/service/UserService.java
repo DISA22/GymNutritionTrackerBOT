@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,5 +44,11 @@ public class UserService extends BaseService<User, Long, UserRepository> {
         save(user);
 
         return user;
+    }
+
+    //другие методы выкидываю детачт пользователя (отсоедененного от бд)
+    public User findByIdInSameSession(Session session, Long id) {
+        return repository.findByTelegramId(session, id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
