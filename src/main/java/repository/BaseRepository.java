@@ -27,9 +27,7 @@ public abstract class BaseRepository<T, ID> {
 
     public void update(Session session, T entity) {
         try {
-            session.beginTransaction();
             T t = session.merge(entity);
-            session.getTransaction().commit();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }

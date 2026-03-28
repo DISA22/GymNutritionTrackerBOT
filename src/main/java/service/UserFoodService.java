@@ -2,23 +2,43 @@ package service;
 
 import config.TransactionSessionManager;
 import domain.Food;
+import domain.User;
 import domain.UserFood;
-import lombok.RequiredArgsConstructor;
 import repository.UserFoodRepository;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@RequiredArgsConstructor
-public class UserFoodService {
-    private final UserService userService;
-    private final FoodService foodService;
-    private final TransactionSessionManager transactionSessionManager;
-    private final UserFoodRepository userFoodRepository;
 
-    public void saveFood(Long telegramId, String foodName) {
+public class UserFoodService extends BaseService<UserFood, Long, UserFoodRepository> {
+    private final FoodService foodService;
+
+    public UserFoodService(UserFoodRepository repository, TransactionSessionManager transactionSessionManager, FoodService foodService) {
+        super(repository, transactionSessionManager);
+        this.foodService = foodService;
+
+    }
+
+    public List<UserFood> findAllFood() {
+        return findAll();
+    }
+
+    public Food save(User user, String foodName, Double amount) {
+
+        var food = foodService.getOrCreateByName(foodName);
+
+        UserFood userFood = UserFood.builder()
+                .user(user)
+                .food(food)
+                .amount(amount)
+                .build();
+
+        save(userFood);
+
+        return food;
+
+        /*
         var user = userService.findByTelegramId(telegramId);
-        var food = foodService.findByName(foodName);
         transactionSessionManager.inTx(session -> {
             UserFood userFood = UserFood.builder()
                     .user(user.get())
@@ -27,38 +47,51 @@ public class UserFoodService {
                     .build();
 
             userFoodRepository.save(session, userFood);
-        });
+        });*/
 
     }
 
-    public String getFoodHistory(Long telegramId) {
+    public String getNutrientsWithAmount(User user, String productName, double amount) {
+        var food = save(user, productName, amount);
+
+        double multiplier = amount / 100;
+
+        StringBuilder response = new StringBuilder();
+        response.append("Отчет о приеме пищи:\n");
+        response.append(String.format("Продукт: %s, Масса: %.1f", food.getFoodName(), amount)).append("\n");
+        response.append(String.format("Каллории: %.1f", food.getCaloriesCal() * multiplier)).append("\n");
+        response.append(String.format("Белки: %.1f", food.getProteinG() * multiplier)).append("\n");
+        response.append(String.format("Жиры: %.1f", food.getFatG() * multiplier)).append("\n");
+        response.append(String.format("Углеводы: %.1f", food.getCarbohydratesG() * multiplier)).append("\n");
+
+        return response.toString();
+    }
+
+
+    public String getFoodHistory(Long telegramId, LocalDate date) {
         List<UserFood> userFoods = transactionSessionManager.inSession(session -> {
-            return userFoodRepository.findAllByTelegramId(session, telegramId);
+            return repository.findAllByTelegramId(session, telegramId, date);
         });
-        StringBuilder result = new StringBuilder("История питания:\n\n");
-        for (UserFood userFood : userFoods) {
-            result.append("\n")
-                    .append(userFood.getDate()).append("\n")
-                    .append("Наименование продукта : ").append(userFood.getFood().getFoodName())
-                    .append("  |  Белок : ").append(userFood.getFood().getProteinG())
-                    .append(" г  |  Калории : ").append(userFood.getFood().getCaloriesCal());
-        }
-        return result.toString() + allBju(userFoods);
+
+        return analyzeNutrients(userFoods, date);
+
     }
 
-    private String allBju(List<UserFood> userFoods) {
-        int calories = 0;
-        int protein = 0;
-        for (UserFood userFood : userFoods) {
-            calories += userFood.getFood().getCaloriesCal();
-            protein += userFood.getFood().getProteinG();
-        }
-        return "\nОбщее количество :\n" +
-                "Каллории: " + calories + " ккал\n" + "Белки: " + protein + " г";
+    private String analyzeNutrients(List<UserFood> userFoods, LocalDate date) {
+        double caloriesPerDay = userFoods.stream().mapToDouble(food -> food.getFood().getCaloriesCal() * food.getAmount() / 100).sum();
+        double proteinPerDay = userFoods.stream().mapToDouble(food -> food.getFood().getProteinG() * food.getAmount() / 100).sum();
+        double fatPerDay = userFoods.stream().mapToDouble(food -> food.getFood().getFatG() * food.getAmount() / 100).sum();
+        double carbsPerDay = userFoods.stream().mapToDouble(food -> food.getFood().getCarbohydratesG() * food.getAmount() / 100).sum();
+
+        StringBuilder result = new StringBuilder("Подсчет КБЖУ за " + date + " \n\n");
+
+        result.append("Калории: ").append(caloriesPerDay).append(" Ккал\n");
+        result.append("Белки: ").append(proteinPerDay).append(" г\n");
+        result.append("Жиры: ").append(fatPerDay).append(" г\n");
+        result.append("Углеводы: ").append(carbsPerDay).append(" г\n");
+
+        return result.toString();
+
     }
 
-    public List<UserFood> findAllFood() {
-        return transactionSessionManager.inSession(session ->
-                userFoodRepository.findAll(session));
-    }
 }

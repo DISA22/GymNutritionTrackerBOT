@@ -24,18 +24,22 @@ public class EdamanHttpClient {
     private static final String APPLICATION_ID = EdamanConfig.getApplicationId();
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
+    private final TranslateClient translateClient;
 
-    public EdamanHttpClient(ObjectMapper objectMapper) {
+    public EdamanHttpClient(ObjectMapper objectMapper, TranslateClient translateClient) {
         this.objectMapper = objectMapper;
+        this.translateClient = translateClient;
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
     }
 
-    public List<NutritionData> getNutrition(String query) {
+    public List<NutritionData> getNutrition(String queryRu) {
         try {
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+            String queryEn = translateClient.translateFromRuToEn(queryRu);
+
+            String encodedQuery = URLEncoder.encode(queryEn, StandardCharsets.UTF_8);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(FOOD_URL + "?app_id="+ APPLICATION_ID + "&app_key=" + API_KEY + "&ingr=" + encodedQuery))

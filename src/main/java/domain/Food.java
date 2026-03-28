@@ -19,7 +19,7 @@ public class Food {
     private Long id;
 
     @CreationTimestamp
-    @Column(name = "date_time", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT NOW()")
+    @Column(name = "date_time", nullable = false, updatable = false)
     private LocalDateTime dateTime;
 
     @Column(name = "food_name", nullable = false)

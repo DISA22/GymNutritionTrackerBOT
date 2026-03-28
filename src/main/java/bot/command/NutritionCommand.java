@@ -1,10 +1,8 @@
 package bot.command;
 
-import integration.EdamanHttpClient;
-import integration.dto.NutritionData;
+import domain.User;
 import lombok.RequiredArgsConstructor;
 import service.FoodService;
-import service.NutritionGoalsService;
 import service.UserFoodService;
 
 import java.util.List;
@@ -16,13 +14,12 @@ public class NutritionCommand implements Command {
 
 
     @Override
-    public String execute(Long id, String... args) {
-        if (args.length == 0) return "Напиши в формате /getNutrition apple. Программа выдает отчет на 100гр продукта";
+    public List<String> execute(User user, String... args) {
+        if (args.length == 0) return List.of("Напиши в формате /getNutrition apple. Программа выдает отчет на 100гр продукта");
 
         String query = String.join(" ", args);
 
         var food = foodService.getOrCreateByName(query);
-        userFoodService.saveFood(id, query);
 
         StringBuilder response = new StringBuilder("Твой отчет на 100г продукта: \n");
 
@@ -32,6 +29,6 @@ public class NutritionCommand implements Command {
         response.append("Жиры: ").append(String.format("%.1f", food.getFatG())).append(" г").append("\n");
         response.append("Углеводы: ").append(String.format("%.1f", food.getCarbohydratesG())).append(" г").append("\n");
 
-        return response.toString();
+        return List.of(response.toString());
     }
 }

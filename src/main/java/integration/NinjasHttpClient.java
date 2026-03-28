@@ -1,4 +1,4 @@
-package integration;
+/*package integration;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,4 +56,4 @@ public class NinjasHttpClient {
         }
 
     }
-}
+}*/

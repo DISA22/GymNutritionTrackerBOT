@@ -23,9 +23,9 @@ public class Exercise {
     @Column(name = "muscle_group",nullable = false)
     private String muscleGroup;
 
-    private String description;
+    @Column(name = "instructions", columnDefinition = "TEXT")
+    private String instructions;
 
-    private String difficulty;
-
+    @Column
     private String equipment;
 }

@@ -3,6 +3,7 @@ package domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -23,11 +24,11 @@ public class Workout {
     private User user;
 
     @Column(name = "workout_date", nullable = false) // если колонка называется иначе
-    private LocalDateTime workoutDate;
+    private LocalDate workoutDate;
 
     @Column(nullable = false)
     private String type;
 
-
+    @Column
     private String notes;
 }
