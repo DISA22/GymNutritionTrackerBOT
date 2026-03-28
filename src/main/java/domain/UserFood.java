@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class UserFood {
-        @Id
+    @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -29,7 +29,10 @@ public class UserFood {
     @JoinColumn(name = "food_id")
     private Food food;
 
+    @Column
+    private Double amount;
+
     @CreationTimestamp
-    @Column(name = "date_time", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT NOW()")
+    @Column(name = "date_time", nullable = false, updatable = false)
     private LocalDate date;
 }

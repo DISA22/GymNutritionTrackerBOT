@@ -2,6 +2,7 @@ package service;
 
 import config.TransactionSessionManager;
 import domain.User;
+import integration.dto.UserDto;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -50,6 +51,15 @@ public class UserService extends BaseService<User, Long, UserRepository> {
     public User findByIdInSameSession(Session session, Long id) {
         return repository.findByTelegramId(session, id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public void completeProfile(User user, UserDto userDto) {
+        user.setName(userDto.name());
+        user.setAge(userDto.age());
+        user.setWeight(userDto.weight());
+        user.setHeight(userDto.height());
+
+        update(user);
     }
 
 }

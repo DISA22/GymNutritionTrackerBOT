@@ -1,4 +1,4 @@
-package config;
+/*package config;
 
 import config.UtilPropertis.AppProperties;
 
@@ -30,4 +30,4 @@ public class NinjasConfig {
     public static String getNinjasApiKey() {
         return NINJAS_API_KEY;
     }
-}
+}*/

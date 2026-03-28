@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16
-    container_name: SmartGym
+    container_name: SmartGymNutritionTracker
     restart: unless-stopped
     environment:
       POSTGRES_DB: SmartGym

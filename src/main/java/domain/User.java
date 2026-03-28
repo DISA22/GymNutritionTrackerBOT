@@ -19,11 +19,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "chat_id", nullable = false, unique = true)
+    @Column(name = "telegram_id", nullable = false, unique = true)
     private Long telegramId;
 
     @Column(nullable = false)
     private String username;
+
+    @Column
+    private String name;
 
     @Column(nullable = false)
     private int age;
@@ -38,8 +41,7 @@ public class User {
     @JoinColumn(name = "goal_id")
     private NutritionGoals nutritionGoals;
 
-
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT NOW()")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

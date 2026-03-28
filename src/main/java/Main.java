@@ -1,22 +1,19 @@
 import bot.GymNutritionTrackerBot;
+import bot.command.WorkoutFlow;
+import bot.command.RegistrationFlow;
 import cache.CashProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import config.HibernateFactory;
 import config.ObjectMapperConfiguration;
 import config.TransactionSessionManager;
 import integration.EdamanHttpClient;
-import integration.NinjasHttpClient;
+import integration.RapidHttpClient;
+import integration.TranslateClient;
 import org.hibernate.SessionFactory;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
-import repository.FoodRepository;
-import repository.NutritionGoalsRepository;
-import repository.UserFoodRepository;
-import repository.UserRepository;
-import service.FoodService;
-import service.NutritionGoalsService;
-import service.UserFoodService;
-import service.UserService;
+import repository.*;
+import service.*;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -25,32 +22,89 @@ public class Main {
         SessionFactory sessionFactory = createSessionFactory();
         registerShutDownHook(sessionFactory);
 
-        //NinjasHttpClient ninjasHttpClient = new NinjasHttpClient(objectMapper);
+        CashProvider.startCleanUpTask();
 
-        EdamanHttpClient edamanHttpClient = createEdamanClient();
 
-        UserService userService = createUserService(sessionFactory);
+        ObjectMapper objectMapper = createMapper();
 
-        FoodService foodService = createFoodService(sessionFactory, edamanHttpClient);
+        TranslateClient translateClient = createTranslateClient(objectMapper);
 
-        UserFoodService userFoodService = createUserFoodService(userService,foodService,sessionFactory);
+        EdamanHttpClient edamanHttpClient = createEdamanClient(objectMapper, translateClient);
 
-        NutritionGoalsService nutritionGoalsService = createNutritionGoalsService(sessionFactory, userFoodService, userService);
+        RapidHttpClient rapidHttpClient = createRapidClient(translateClient, objectMapper);
 
-        GymNutritionTrackerBot gymNutritionTrackerBot = createBot(userService, foodService, userFoodService, nutritionGoalsService);
+        TransactionSessionManager txManager = createTxManager(sessionFactory);
+
+        UserService userService = createUserService(txManager);
+
+        FoodService foodService = createFoodService(txManager, edamanHttpClient, translateClient);
+
+        UserFoodService userFoodService = createUserFoodService(foodService, txManager);
+
+        ExerciseService exerciseService = createExerciseService(txManager, rapidHttpClient, translateClient);
+
+        NutritionGoalsService nutritionGoalsService = createNutritionGoalsService(userFoodService, userService, txManager);
+
+        WorkoutService workoutService = createWorkoutService(txManager);
+
+        WorkoutExerciseService workoutExerciseService = createWorkoutExerciseService(txManager, exerciseService, workoutService);
+
+        RegistrationFlow registrationFlow = createRegistrationFlow(userService);
+
+        WorkoutFlow workoutFlow = createWorkoutFlow(exerciseService, workoutService, workoutExerciseService);
+
+        GymNutritionTrackerBot gymNutritionTrackerBot = createBot(userService, foodService, userFoodService, nutritionGoalsService, exerciseService, registrationFlow, workoutFlow);
 
         startBot(gymNutritionTrackerBot);
     }
 
-    private static UserFoodService createUserFoodService(UserService userService,FoodService foodService,SessionFactory sessionFactory){
-        TransactionSessionManager transactionSessionManager = new TransactionSessionManager(sessionFactory);
-        UserFoodRepository foodRepository = new UserFoodRepository();
-        return new UserFoodService(userService, foodService, transactionSessionManager, foodRepository);
+    private static RegistrationFlow createRegistrationFlow(UserService userService) {
+        return new RegistrationFlow(userService);
     }
-    private static NutritionGoalsService createNutritionGoalsService(SessionFactory sessionFactory, UserFoodService userFoodService, UserService userService) {
+
+    private static WorkoutFlow createWorkoutFlow(ExerciseService exerciseService, WorkoutService workoutService, WorkoutExerciseService workoutExerciseService) {
+        return new WorkoutFlow(exerciseService, workoutService, workoutExerciseService);
+    }
+
+    private static WorkoutExerciseService createWorkoutExerciseService(TransactionSessionManager txManager, ExerciseService exerciseService, WorkoutService workoutService) {
+        WorkoutExerciseRepository workoutExerciseRepository = new WorkoutExerciseRepository();
+
+        return new WorkoutExerciseService(workoutExerciseRepository, txManager, exerciseService, workoutService);
+    }
+
+    private static WorkoutService createWorkoutService(TransactionSessionManager txManager) {
+        WorkoutRepository workoutRepository = new WorkoutRepository();
+
+        return new WorkoutService(workoutRepository, txManager);
+    }
+
+    private static ObjectMapper createMapper() {
+        return ObjectMapperConfiguration.initJackson();
+    }
+
+    private static TranslateClient createTranslateClient(ObjectMapper objectMapper) {
+        return new TranslateClient(objectMapper);
+    }
+
+    private static RapidHttpClient createRapidClient(TranslateClient translateClient, ObjectMapper objectMapper) {
+        return new RapidHttpClient(translateClient, objectMapper);
+    }
+
+    private static UserFoodService createUserFoodService(FoodService foodService, TransactionSessionManager txManager) {
+        UserFoodRepository foodRepository = new UserFoodRepository();
+
+        return new UserFoodService(foodRepository, txManager, foodService);
+    }
+
+    private static NutritionGoalsService createNutritionGoalsService(UserFoodService userFoodService, UserService userService, TransactionSessionManager txManager) {
         NutritionGoalsRepository nutritionGoalsRepository = new NutritionGoalsRepository();
-        TransactionSessionManager transactionSessionManager1 = new TransactionSessionManager(sessionFactory);
-        return new NutritionGoalsService(nutritionGoalsRepository, transactionSessionManager1, userFoodService, userService);
+
+        return new NutritionGoalsService(nutritionGoalsRepository, txManager, userFoodService, userService);
+    }
+
+    private static TransactionSessionManager createTxManager(SessionFactory sessionFactory) {
+
+        return new TransactionSessionManager(sessionFactory);
     }
 
 
@@ -62,25 +116,31 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(sessionFactory::close));
     }
 
-    private static EdamanHttpClient createEdamanClient() {
-        ObjectMapper objectMapper = ObjectMapperConfiguration.initJackson();
-        return new EdamanHttpClient(objectMapper);
+    private static EdamanHttpClient createEdamanClient(ObjectMapper objectMapper, TranslateClient translateClient) {
+
+        return new EdamanHttpClient(objectMapper, translateClient);
     }
 
-    private static UserService createUserService(SessionFactory sessionFactory) {
+    private static ExerciseService createExerciseService(TransactionSessionManager txManager, RapidHttpClient rapidHttpClient, TranslateClient translateClient) {
+        ExerciseRepository repository = new ExerciseRepository();
+
+        return new ExerciseService(repository, txManager, rapidHttpClient, translateClient);
+    }
+
+    private static UserService createUserService(TransactionSessionManager txManager) {
         UserRepository userRepository = new UserRepository();
-        TransactionSessionManager txSessionManager = new TransactionSessionManager(sessionFactory);
-        return new UserService(userRepository, txSessionManager);
+
+        return new UserService(userRepository, txManager);
     }
 
-    private static FoodService createFoodService(SessionFactory sessionFactory, EdamanHttpClient client) {
+    private static FoodService createFoodService(TransactionSessionManager txManager, EdamanHttpClient edamanClient, TranslateClient translateClient) {
         FoodRepository foodRepository = new FoodRepository();
-        TransactionSessionManager txSessionManager = new TransactionSessionManager(sessionFactory);
-        return new FoodService(foodRepository, txSessionManager, client);
+
+        return new FoodService(foodRepository, txManager, edamanClient, translateClient);
     }
 
-    private static GymNutritionTrackerBot createBot(UserService userService, FoodService foodService, UserFoodService userFoodService, NutritionGoalsService nutritionGoalsService) {
-        return new GymNutritionTrackerBot(userService, foodService, userFoodService, nutritionGoalsService);
+    private static GymNutritionTrackerBot createBot(UserService userService, FoodService foodService, UserFoodService userFoodService, NutritionGoalsService nutritionGoalsService, ExerciseService exerciseService, RegistrationFlow registrationFlow, WorkoutFlow workoutFlow) {
+        return new GymNutritionTrackerBot(userService, foodService, userFoodService, nutritionGoalsService, exerciseService, registrationFlow, workoutFlow);
     }
 
     private static void startBot(GymNutritionTrackerBot bot) {

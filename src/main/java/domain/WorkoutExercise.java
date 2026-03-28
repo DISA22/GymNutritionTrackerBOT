@@ -2,6 +2,8 @@ package domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Duration;
 
@@ -36,5 +38,6 @@ public class WorkoutExercise {
     private Double weight;
 
     @Column(columnDefinition = "interval")
+    @JdbcTypeCode(SqlTypes.INTERVAL_SECOND)
     private Duration duration;
 }

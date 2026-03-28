@@ -1,10 +1,15 @@
 package bot.command;
 
+import domain.User;
+
+import java.util.List;
+
 public class StartCommand implements Command {
+
     @Override
-    public String execute(Long id,String... args) {
-        return "Привет! Я бот для слежения за твоими питанием и тренировками\n" +
-                "Доступные команды: /start, /getNutrition, /getExercise, /getHistory, /setGoal";
+    public List<String> execute(User user, String... args) {
+        return List.of("Привет! Я бот для слежения за твоими питанием и тренировками\n" +
+                "Доступные команды: /start, /getNutrition, /getExercise, /getHistory, /setGoal, /trackeat, /profile");
     }
 }
 
